@@ -3,8 +3,6 @@ package com.aks.gradle.concurrency;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 
 import com.aks.gradle.utils.JUtils;
 
@@ -255,6 +253,22 @@ public class LearningCompletableFutures {
 		        CompletableFuture.completedFuture(getCommentsAsync()).thenAcceptAsync(p -> setCommentsSilently(cache, p)));
 		cf2.join();
 		System.out.println(cache);
+
+		System.out.println("Combine and compose");
+		CompletableFuture<?> cf3 = CompletableFuture.supplyAsync(() -> "Hello").thenCompose(s -> CompletableFuture.supplyAsync(() -> s + " World"));
+		cf3.join();
+		System.out.println(cf3.get());
+		Object obj = CompletableFuture.supplyAsync(() -> {
+			throw new RuntimeException("1");
+		}).whenComplete((i, err) -> {
+			System.out.println("hello");
+			throw new RuntimeException("2" + err.getMessage());
+		}).exceptionally(e -> {
+			System.err.println("Error greeting: " + e.getMessage());
+			return null;
+		}).join();
+		System.out.println(obj);
+		System.out.println("Done");
 	}
 
 	private static ApiResponseCache setAlbumsSilently(ApiResponseCache cache, CompletableFuture<List<Albums>> p) {
